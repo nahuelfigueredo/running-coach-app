@@ -62,7 +62,7 @@ class _MyStatisticsScreenState extends State<MyStatisticsScreen> {
         streak = 1;
       } else {
         final diff = DateHelpers.daysBetween(
-            session.scheduledDate, prevDate!);
+            session.scheduledDate, prevDate);
         if (diff <= 1) {
           streak++;
           prevDate = session.scheduledDate;
