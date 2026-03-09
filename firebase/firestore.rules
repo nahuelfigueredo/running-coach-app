@@ -1,0 +1,147 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helper Functions ────────────────────────────────────────────────────
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isCoach() {
+      return isAuthenticated() && getUserData().role == 'coach';
+    }
+
+    function isStudent() {
+      return isAuthenticated() && getUserData().role == 'student';
+    }
+
+    function isCoachOf(studentId) {
+      return isCoach() &&
+        get(/databases/$(database)/documents/users/$(studentId)).data.coachId == request.auth.uid;
+    }
+
+    // ─── Users ───────────────────────────────────────────────────────────────
+
+    match /users/{userId} {
+      // Leer: el propio usuario o el coach del usuario
+      allow read: if isAuthenticated() && (
+        isOwner(userId) ||
+        (isCoach() && resource.data.coachId == request.auth.uid)
+      );
+
+      // Crear: el propio usuario durante el registro
+      allow create: if isAuthenticated() && isOwner(userId);
+
+      // Actualizar: solo el propio usuario
+      allow update: if isAuthenticated() && isOwner(userId);
+
+      // Eliminar: no permitido
+      allow delete: if false;
+    }
+
+    // ─── Routines ────────────────────────────────────────────────────────────
+
+    match /routines/{routineId} {
+      // Leer: coaches (propias) y alumnos (asignadas - verificado en app)
+      allow read: if isAuthenticated();
+
+      // Crear: solo coaches
+      allow create: if isCoach() && request.resource.data.coachId == request.auth.uid;
+
+      // Actualizar: solo el coach dueño
+      allow update: if isCoach() && resource.data.coachId == request.auth.uid;
+
+      // Eliminar: solo el coach dueño
+      allow delete: if isCoach() && resource.data.coachId == request.auth.uid;
+    }
+
+    // ─── Workouts ────────────────────────────────────────────────────────────
+
+    match /workouts/{workoutId} {
+      // Leer: usuarios autenticados
+      allow read: if isAuthenticated();
+
+      // Crear: solo coaches
+      allow create: if isCoach();
+
+      // Actualizar: solo coaches
+      allow update: if isCoach();
+
+      // Eliminar: solo coaches
+      allow delete: if isCoach();
+    }
+
+    // ─── Assignments ─────────────────────────────────────────────────────────
+
+    match /assignments/{assignmentId} {
+      // Leer: el coach dueño o el alumno asignado
+      allow read: if isAuthenticated() && (
+        resource.data.coachId == request.auth.uid ||
+        resource.data.studentId == request.auth.uid
+      );
+
+      // Crear: solo coaches
+      allow create: if isCoach() && request.resource.data.coachId == request.auth.uid;
+
+      // Actualizar: el coach dueño
+      allow update: if isCoach() && resource.data.coachId == request.auth.uid;
+
+      // Eliminar: el coach dueño
+      allow delete: if isCoach() && resource.data.coachId == request.auth.uid;
+    }
+
+    // ─── Training Sessions ───────────────────────────────────────────────────
+
+    match /trainingSessions/{sessionId} {
+      // Leer: el alumno dueño o su coach
+      allow read: if isAuthenticated() && (
+        resource.data.studentId == request.auth.uid ||
+        isCoachOf(resource.data.studentId)
+      );
+
+      // Crear: el alumno o el coach
+      allow create: if isAuthenticated() && (
+        request.resource.data.studentId == request.auth.uid ||
+        isCoach()
+      );
+
+      // Actualizar: el alumno dueño
+      allow update: if isAuthenticated() &&
+        resource.data.studentId == request.auth.uid;
+
+      // Eliminar: no permitido
+      allow delete: if false;
+    }
+
+    // ─── Messages ────────────────────────────────────────────────────────────
+
+    match /messages/{chatId}/chats/{messageId} {
+      // Leer: participantes del chat
+      allow read: if isAuthenticated() && (
+        resource.data.senderId == request.auth.uid ||
+        resource.data.receiverId == request.auth.uid
+      );
+
+      // Crear: el emisor autenticado
+      allow create: if isAuthenticated() &&
+        request.resource.data.senderId == request.auth.uid;
+
+      // Actualizar: solo para marcar como leído (el receptor)
+      allow update: if isAuthenticated() &&
+        resource.data.receiverId == request.auth.uid &&
+        request.resource.data.keys().hasOnly(['read']);
+
+      // Eliminar: no permitido
+      allow delete: if false;
+    }
+  }
+}
