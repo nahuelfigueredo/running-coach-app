@@ -14,6 +14,9 @@ class RoutineModel {
   final DateTime? endDate;
   final bool isActive;
 
+  /// Mapa de workouts por día: {'monday': ['workoutId1', ...], 'tuesday': [...]}
+  final Map<String, List<String>> weeklyWorkouts;
+
   const RoutineModel({
     required this.id,
     required this.name,
@@ -28,6 +31,7 @@ class RoutineModel {
     this.startDate,
     this.endDate,
     this.isActive = true,
+    this.weeklyWorkouts = const {},
   });
 
   /// Crea un RoutineModel desde un mapa de Firestore
@@ -62,6 +66,14 @@ class RoutineModel {
             )
           : null,
       isActive: map['isActive'] as bool? ?? true,
+      weeklyWorkouts: map['weeklyWorkouts'] != null
+          ? Map<String, List<String>>.from(
+              (map['weeklyWorkouts'] as Map).map(
+                (key, value) =>
+                    MapEntry(key as String, List<String>.from(value as List)),
+              ),
+            )
+          : const {},
     );
   }
 
@@ -80,6 +92,7 @@ class RoutineModel {
       if (startDate != null) 'startDate': startDate,
       if (endDate != null) 'endDate': endDate,
       'isActive': isActive,
+      if (weeklyWorkouts.isNotEmpty) 'weeklyWorkouts': weeklyWorkouts,
     };
   }
 
@@ -98,6 +111,7 @@ class RoutineModel {
     DateTime? startDate,
     DateTime? endDate,
     bool? isActive,
+    Map<String, List<String>>? weeklyWorkouts,
   }) {
     return RoutineModel(
       id: id ?? this.id,
@@ -113,7 +127,22 @@ class RoutineModel {
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       isActive: isActive ?? this.isActive,
+      weeklyWorkouts: weeklyWorkouts ?? this.weeklyWorkouts,
     );
+  }
+
+  /// Obtiene los IDs de workouts asignados a un día específico.
+  List<String> getWorkoutsForDay(String day) {
+    return weeklyWorkouts[day.toLowerCase()] ?? [];
+  }
+
+  /// Verifica si la rutina está vigente en la fecha actual.
+  bool isCurrentlyActive() {
+    if (!isActive) return false;
+    if (startDate == null || endDate == null) return isActive;
+    final now = DateTime.now();
+    return now.isAfter(startDate!) &&
+        now.isBefore(endDate!.add(const Duration(days: 1)));
   }
 
   @override

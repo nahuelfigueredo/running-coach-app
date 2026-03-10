@@ -15,6 +15,18 @@ class WorkoutModel {
   final int? restTime; // segundos
   final String? notes;
 
+  /// Ritmo objetivo en formato min/km, ej: '5:30'
+  final String? targetPace;
+
+  /// Zona de frecuencia cardíaca objetivo, ej: 'Z2: 140-150 bpm'
+  final String? heartRateZone;
+
+  /// Detalles específicos para entrenamientos de intervalos
+  final Map<String, dynamic>? intervalDetails;
+
+  /// Fecha de creación del workout
+  final DateTime? createdAt;
+
   const WorkoutModel({
     required this.id,
     required this.routineId,
@@ -30,6 +42,10 @@ class WorkoutModel {
     this.series,
     this.restTime,
     this.notes,
+    this.targetPace,
+    this.heartRateZone,
+    this.intervalDetails,
+    this.createdAt,
   });
 
   /// Crea un WorkoutModel desde un mapa de Firestore
@@ -49,6 +65,14 @@ class WorkoutModel {
       series: (map['series'] as num?)?.toInt(),
       restTime: (map['restTime'] as num?)?.toInt(),
       notes: map['notes'] as String?,
+      targetPace: map['targetPace'] as String?,
+      heartRateZone: map['heartRateZone'] as String?,
+      intervalDetails: map['intervalDetails'] as Map<String, dynamic>?,
+      createdAt: map['createdAt'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(
+              (map['createdAt'] as dynamic).millisecondsSinceEpoch as int,
+            )
+          : null,
     );
   }
 
@@ -68,6 +92,10 @@ class WorkoutModel {
       if (series != null) 'series': series,
       if (restTime != null) 'restTime': restTime,
       if (notes != null) 'notes': notes,
+      if (targetPace != null) 'targetPace': targetPace,
+      if (heartRateZone != null) 'heartRateZone': heartRateZone,
+      if (intervalDetails != null) 'intervalDetails': intervalDetails,
+      if (createdAt != null) 'createdAt': createdAt,
     };
   }
 
@@ -87,6 +115,10 @@ class WorkoutModel {
     int? series,
     int? restTime,
     String? notes,
+    String? targetPace,
+    String? heartRateZone,
+    Map<String, dynamic>? intervalDetails,
+    DateTime? createdAt,
   }) {
     return WorkoutModel(
       id: id ?? this.id,
@@ -103,7 +135,79 @@ class WorkoutModel {
       series: series ?? this.series,
       restTime: restTime ?? this.restTime,
       notes: notes ?? this.notes,
+      targetPace: targetPace ?? this.targetPace,
+      heartRateZone: heartRateZone ?? this.heartRateZone,
+      intervalDetails: intervalDetails ?? this.intervalDetails,
+      createdAt: createdAt ?? this.createdAt,
     );
+  }
+
+  /// Emoji representativo del tipo de entrenamiento
+  String get typeEmoji {
+    switch (type) {
+      case 'continuous':
+        return '🏃';
+      case 'intervals':
+        return '💪';
+      case 'fartlek':
+        return '⚡';
+      case 'hills':
+        return '🏔️';
+      case 'active_rest':
+        return '🧘';
+      case 'rest':
+        return '😴';
+      case 'strength':
+        return '🏋️';
+      case 'series':
+        return '🔄';
+      case 'recovery':
+        return '🧘';
+      default:
+        return '🏃';
+    }
+  }
+
+  /// Nombre legible del tipo de entrenamiento
+  String get typeName {
+    switch (type) {
+      case 'continuous':
+        return 'Carrera Continua';
+      case 'intervals':
+        return 'Intervalos';
+      case 'fartlek':
+        return 'Fartlek';
+      case 'hills':
+        return 'Cuestas';
+      case 'active_rest':
+        return 'Descanso Activo';
+      case 'rest':
+        return 'Descanso';
+      case 'strength':
+        return 'Fortalecimiento';
+      case 'series':
+        return 'Series';
+      case 'recovery':
+        return 'Recuperación';
+      default:
+        return 'Entrenamiento';
+    }
+  }
+
+  /// Color hexadecimal representativo de la intensidad
+  String get intensityColor {
+    switch (intensity) {
+      case 'easy':
+        return '#10B981';
+      case 'moderate':
+        return '#F59E0B';
+      case 'hard':
+        return '#EF4444';
+      case 'maximum':
+        return '#7C3AED';
+      default:
+        return '#6B7280';
+    }
   }
 
   @override

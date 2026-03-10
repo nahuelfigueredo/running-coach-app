@@ -28,6 +28,16 @@ class WorkoutTypes {
   static const String rest = 'rest';
   static const String strength = 'strength';
 
+  static const List<String> all = [
+    continuous,
+    intervals,
+    fartlek,
+    hills,
+    activeRest,
+    rest,
+    strength,
+  ];
+
   static const Map<String, String> labels = {
     continuous: 'Carrera continua',
     intervals: 'Intervalos',
@@ -51,6 +61,8 @@ class WorkoutTypes {
     rest: '😴',
     strength: '🏋️',
   };
+
+  static String getName(String type) => labels[type] ?? 'Entrenamiento';
 }
 
 /// Intensidades de entrenamiento
@@ -66,6 +78,31 @@ class Intensity {
     hard: 'Intenso (80-90% FCMax)',
     maximum: 'Máximo (>90% FCMax)',
   };
+}
+
+/// Niveles de intensidad (alias moderno de [Intensity] con helpers adicionales).
+class IntensityLevels {
+  static const String easy = 'easy';
+  static const String moderate = 'moderate';
+  static const String hard = 'hard';
+  static const String maximum = 'maximum';
+
+  static const List<String> all = [easy, moderate, hard, maximum];
+
+  static String getName(String level) {
+    switch (level) {
+      case easy:
+        return 'Fácil';
+      case moderate:
+        return 'Moderado';
+      case hard:
+        return 'Difícil';
+      case maximum:
+        return 'Máximo';
+      default:
+        return 'Moderado';
+    }
+  }
 }
 
 /// Niveles de rutina
@@ -91,6 +128,7 @@ class AssignmentStatus {
 /// Estados de sesión de entrenamiento
 class SessionStatus {
   static const String pending = 'pending';
+  static const String inProgress = 'in_progress';
   static const String completed = 'completed';
   static const String skipped = 'skipped';
 }
@@ -109,6 +147,9 @@ class WeekDays {
     monday, tuesday, wednesday, thursday, friday, saturday, sunday,
   ];
 
+  /// Alias de [ordered] requerido por los nuevos modelos.
+  static const List<String> all = ordered;
+
   static const Map<String, String> labels = {
     monday: 'Lunes',
     tuesday: 'Martes',
@@ -119,6 +160,16 @@ class WeekDays {
     sunday: 'Domingo',
   };
 
+  static const Map<String, String> shortLabels = {
+    monday: 'Lun',
+    tuesday: 'Mar',
+    wednesday: 'Mié',
+    thursday: 'Jue',
+    friday: 'Vie',
+    saturday: 'Sáb',
+    sunday: 'Dom',
+  };
+
   /// Convierte índice (0 = lunes) a clave de día
   static String fromIndex(int index) => ordered[index % 7];
 
@@ -127,6 +178,12 @@ class WeekDays {
     final idx = ordered.indexOf(day);
     return idx == -1 ? 0 : idx;
   }
+
+  /// Nombre completo del día en español.
+  static String getName(String day) => labels[day] ?? '';
+
+  /// Nombre abreviado del día en español.
+  static String getShortName(String day) => shortLabels[day] ?? '';
 }
 
 /// Mensajes de error
