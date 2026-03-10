@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart'; // ← AGREGADO
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/routine_provider.dart';
@@ -17,6 +18,8 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform, // ← AGREGADO
   );
+  // Inicializar formateo de fechas para español
+  await initializeDateFormatting('es_ES', null);
   runApp(const RunningCoachApp());
 }
 

@@ -10,6 +10,26 @@ import '../utils/constants.dart';
 class DatabaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  /// Convierte errores de Firestore en [Exception] con mensajes legibles.
+  ///
+  /// Detecta errores de tipo [FirebaseException] y, en particular,
+  /// los errores de índices faltantes (`failed-precondition`), retornando
+  /// mensajes amigables en lugar de los mensajes técnicos de Firebase.
+  Exception _handleFirestoreError(dynamic e) {
+    if (e is FirebaseException) {
+      if (e.code == 'failed-precondition' &&
+          (e.message?.contains('index') ?? false)) {
+        return Exception(
+          'La aplicación necesita configuración adicional. '
+          'Por favor contacta al administrador o crea los índices necesarios en Firebase Console. '
+          'Consulta FIRESTORE_SETUP.md para más información.',
+        );
+      }
+      return Exception('Error de base de datos: ${e.message}');
+    }
+    return Exception('Error inesperado: $e');
+  }
+
   // ─── USUARIOS ────────────────────────────────────────────────────────────────
 
   /// Crea un nuevo documento de usuario en Firestore
@@ -20,7 +40,7 @@ class DatabaseService {
           .doc(user.uid)
           .set(user.toMap());
     } catch (e) {
-      throw Exception('Error al crear usuario: $e');
+      throw _handleFirestoreError(e);
     }
   }
 
@@ -31,7 +51,7 @@ class DatabaseService {
       if (!doc.exists) return null;
       return UserModel.fromMap(doc.data()!, doc.id);
     } catch (e) {
-      throw Exception('Error al obtener usuario: $e');
+      throw _handleFirestoreError(e);
     }
   }
 
@@ -40,7 +60,7 @@ class DatabaseService {
     try {
       await _firestore.collection(Collections.users).doc(uid).update(data);
     } catch (e) {
-      throw Exception('Error al actualizar usuario: $e');
+      throw _handleFirestoreError(e);
     }
   }
 
@@ -55,7 +75,7 @@ class DatabaseService {
           .map((doc) => UserModel.fromMap(doc.data(), doc.id))
           .toList();
     } catch (e) {
-      throw Exception('Error al obtener usuarios: $e');
+      throw _handleFirestoreError(e);
     }
   }
 
@@ -71,7 +91,7 @@ class DatabaseService {
           .map((doc) => UserModel.fromMap(doc.data(), doc.id))
           .toList();
     } catch (e) {
-      throw Exception('Error al obtener alumnos: $e');
+      throw _handleFirestoreError(e);
     }
   }
 
@@ -85,7 +105,7 @@ class DatabaseService {
           .add(routine.toMap());
       return doc.id;
     } catch (e) {
-      throw Exception('Error al crear rutina: $e');
+      throw _handleFirestoreError(e);
     }
   }
 
@@ -98,7 +118,7 @@ class DatabaseService {
           .map((doc) => RoutineModel.fromMap(doc.data(), doc.id))
           .toList();
     } catch (e) {
-      throw Exception('Error al obtener rutinas: $e');
+      throw _handleFirestoreError(e);
     }
   }
 
@@ -114,7 +134,7 @@ class DatabaseService {
           .map((doc) => RoutineModel.fromMap(doc.data(), doc.id))
           .toList();
     } catch (e) {
-      throw Exception('Error al obtener rutinas del coach: $e');
+      throw _handleFirestoreError(e);
     }
   }
 
@@ -130,7 +150,7 @@ class DatabaseService {
           .map((doc) => RoutineModel.fromMap(doc.data(), doc.id))
           .toList();
     } catch (e) {
-      throw Exception('Error al obtener rutinas del alumno: $e');
+      throw _handleFirestoreError(e);
     }
   }
 
@@ -142,7 +162,7 @@ class DatabaseService {
           .doc(routineId)
           .update({...data, 'updatedAt': DateTime.now()});
     } catch (e) {
-      throw Exception('Error al actualizar rutina: $e');
+      throw _handleFirestoreError(e);
     }
   }
 
@@ -154,7 +174,7 @@ class DatabaseService {
           .doc(routineId)
           .delete();
     } catch (e) {
-      throw Exception('Error al eliminar rutina: $e');
+      throw _handleFirestoreError(e);
     }
   }
 
@@ -168,7 +188,7 @@ class DatabaseService {
           .add(workout.toMap());
       return doc.id;
     } catch (e) {
-      throw Exception('Error al agregar workout: $e');
+      throw _handleFirestoreError(e);
     }
   }
 
@@ -184,7 +204,7 @@ class DatabaseService {
           .map((doc) => WorkoutModel.fromMap(doc.data(), doc.id))
           .toList();
     } catch (e) {
-      throw Exception('Error al obtener workouts: $e');
+      throw _handleFirestoreError(e);
     }
   }
 
@@ -197,7 +217,7 @@ class DatabaseService {
           .doc(workoutId)
           .update(data);
     } catch (e) {
-      throw Exception('Error al actualizar workout: $e');
+      throw _handleFirestoreError(e);
     }
   }
 
@@ -209,7 +229,7 @@ class DatabaseService {
           .doc(workoutId)
           .delete();
     } catch (e) {
-      throw Exception('Error al eliminar workout: $e');
+      throw _handleFirestoreError(e);
     }
   }
 
@@ -223,7 +243,7 @@ class DatabaseService {
           .add(assignment.toMap());
       return doc.id;
     } catch (e) {
-      throw Exception('Error al asignar rutina: $e');
+      throw _handleFirestoreError(e);
     }
   }
 
@@ -240,7 +260,7 @@ class DatabaseService {
           .map((doc) => AssignmentModel.fromMap(doc.data(), doc.id))
           .toList();
     } catch (e) {
-      throw Exception('Error al obtener asignaciones: $e');
+      throw _handleFirestoreError(e);
     }
   }
 
@@ -256,7 +276,7 @@ class DatabaseService {
           .map((doc) => AssignmentModel.fromMap(doc.data(), doc.id))
           .toList();
     } catch (e) {
-      throw Exception('Error al obtener asignaciones del coach: $e');
+      throw _handleFirestoreError(e);
     }
   }
 
@@ -269,7 +289,7 @@ class DatabaseService {
           .doc(assignmentId)
           .update(data);
     } catch (e) {
-      throw Exception('Error al actualizar asignación: $e');
+      throw _handleFirestoreError(e);
     }
   }
 
@@ -283,7 +303,7 @@ class DatabaseService {
           .add(session.toMap());
       return doc.id;
     } catch (e) {
-      throw Exception('Error al crear sesión: $e');
+      throw _handleFirestoreError(e);
     }
   }
 
@@ -300,7 +320,7 @@ class DatabaseService {
           .map((doc) => TrainingSessionModel.fromMap(doc.data(), doc.id))
           .toList();
     } catch (e) {
-      throw Exception('Error al obtener sesiones: $e');
+      throw _handleFirestoreError(e);
     }
   }
 
@@ -323,7 +343,7 @@ class DatabaseService {
         if (notes != null) 'notes': notes,
       });
     } catch (e) {
-      throw Exception('Error al completar sesión: $e');
+      throw _handleFirestoreError(e);
     }
   }
 
@@ -355,7 +375,7 @@ class DatabaseService {
         'totalDuration': totalDuration,
       };
     } catch (e) {
-      throw Exception('Error al obtener estadísticas: $e');
+      throw _handleFirestoreError(e);
     }
   }
 }
