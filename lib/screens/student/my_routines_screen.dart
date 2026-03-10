@@ -42,25 +42,29 @@ class _MyRoutinesScreenState extends State<MyRoutinesScreen> {
       final assignments =
           await db.getAssignmentsByStudent(auth.currentUser!.uid);
 
-      // Obtener detalles de cada rutina
+      // Obtener detalles de cada rutina DE FORMA EFICIENTE (en paralelo)
+      final routineFutures = assignments
+          .map((assignment) => db.getRoutineById(assignment.routineId))
+          .toList();
+      final routines = await Future.wait(routineFutures);
+
       final List<Map<String, dynamic>> result = [];
-      for (final assignment in assignments) {
-        final routineDoc = await db.getRoutines();
-        final routine = routineDoc.firstWhere(
-          (r) => r.id == assignment.routineId,
-          orElse: () => RoutineModel(
-            id: assignment.routineId,
-            name: 'Rutina no encontrada',
-            description: '',
-            coachId: '',
-            level: RoutineLevels.beginner,
-            durationWeeks: 0,
-            goals: [],
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          ),
-        );
-        result.add({'assignment': assignment, 'routine': routine});
+      for (int i = 0; i < assignments.length; i++) {
+        result.add({
+          'assignment': assignments[i],
+          'routine': routines[i] ??
+              RoutineModel(
+                id: assignments[i].routineId,
+                name: 'Rutina no encontrada',
+                description: 'Esta rutina ya no está disponible',
+                coachId: '',
+                level: RoutineLevels.beginner,
+                durationWeeks: 0,
+                goals: [],
+                createdAt: DateTime.now(),
+                updatedAt: DateTime.now(),
+              ),
+        });
       }
       _assignedRoutines = result;
     } catch (e) {
