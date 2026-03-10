@@ -109,6 +109,20 @@ class DatabaseService {
     }
   }
 
+  /// Obtiene una rutina específica por su ID
+  Future<RoutineModel?> getRoutineById(String routineId) async {
+    try {
+      final doc = await _firestore
+          .collection(Collections.routines)
+          .doc(routineId)
+          .get();
+      if (!doc.exists) return null;
+      return RoutineModel.fromMap(doc.data()!, doc.id);
+    } catch (e) {
+      throw _handleFirestoreError(e);
+    }
+  }
+
   /// Obtiene todas las rutinas
   Future<List<RoutineModel>> getRoutines() async {
     try {
