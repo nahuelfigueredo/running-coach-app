@@ -156,14 +156,14 @@ class AppTheme {
         labelStyle: GoogleFonts.poppins(color: textSecondary),
         hintStyle: GoogleFonts.poppins(color: textLight),
       ),
-      cardTheme: CardTheme(
+      cardTheme: const CardThemeData(
         color: cardColor,
         elevation: 2,
-        shadowColor: Colors.black.withOpacity(0.08),
+        shadowColor: Colors.black12,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.all(Radius.circular(16)),
         ),
-        margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+        margin: EdgeInsets.symmetric(horizontal: 0, vertical: 4),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: Colors.white,

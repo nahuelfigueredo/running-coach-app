@@ -46,8 +46,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _loadingCoaches = true);
     try {
       final db = DatabaseService();
+      print('🔍 Intentando cargar coaches...');
       _coaches = await db.getUsersByRole(Roles.coach);
-    } catch (_) {
+      print('✅ Coaches cargados: ${_coaches.length}');
+      for (var coach in _coaches) {
+        print('  👤 ${coach.name} (${coach.email})');
+      }
+    } catch (e) {
+      print('❌ Error cargando coaches: $e');
       _coaches = [];
     } finally {
       if (mounted) setState(() => _loadingCoaches = false);
