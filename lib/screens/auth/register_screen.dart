@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/user_model.dart';
@@ -46,15 +47,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _loadingCoaches = true);
     try {
       final db = DatabaseService();
-      print('🔍 Intentando cargar coaches...');
-      _coaches = await db.getUsersByRole(Roles.coach);
-      print('✅ Coaches cargados: ${_coaches.length}');
-      for (var coach in _coaches) {
-        print('  👤 ${coach.name} (${coach.email})');
+      if (kDebugMode) {
+        print('🔍 Intentando cargar coaches...');
       }
-    } catch (e) {
-      print('❌ Error cargando coaches: $e');
+      _coaches = await db.getUsersByRole(Roles.coach);
+      if (kDebugMode) {
+        print('✅ Coaches cargados: ${_coaches.length}');
+        for (var coach in _coaches) {
+          print('  👤 ${coach.name} (${coach.email})');
+        }
+      }
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        print('❌ Error cargando coaches: $e');
+        print('Stack trace: $stackTrace');
+      }
       _coaches = [];
+
+      // Mostrar error al usuario
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              kDebugMode
+                  ? 'Error al cargar coaches: ${e.toString()}'
+                  : 'Error al cargar coaches. Intenta de nuevo.',
+            ),
+            backgroundColor: AppTheme.errorColor,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loadingCoaches = false);
     }
@@ -74,6 +97,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    if (kDebugMode) {
+      print('🔐 Iniciando registro...');
+      print('  Email: ${_emailController.text}');
+      print('  Rol: $_selectedRole');
+      if (_selectedRole == Roles.student) {
+        print('  Coach ID: $_selectedCoachId');
+      }
+    }
+
     final authProvider = context.read<AuthProvider>();
     final success = await authProvider.signUp(
       _emailController.text,
@@ -85,11 +117,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (!mounted) return;
 
-    if (!success) {
+    if (success) {
+      if (kDebugMode) {
+        print('✅ Registro exitoso');
+      }
+    } else {
+      if (kDebugMode) {
+        print('❌ Error en registro: ${authProvider.errorMessage}');
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(authProvider.errorMessage ?? ErrorMessages.genericError),
           backgroundColor: AppTheme.errorColor,
+          duration: const Duration(seconds: 5),
         ),
       );
     }
@@ -187,9 +227,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   if (_loadingCoaches)
                     const Center(child: CircularProgressIndicator())
                   else if (_coaches.isEmpty)
-                    const Text(
-                      'No hay coaches disponibles por el momento.',
-                      style: TextStyle(color: AppTheme.textSecondary),
+                    Column(
+                      children: [
+                        const Text(
+                          'No hay coaches disponibles por el momento.',
+                          style: TextStyle(color: AppTheme.textSecondary),
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton.icon(
+                          onPressed: _loadCoaches,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Recargar'),
+                        ),
+                      ],
                     )
                   else
                     Container(
