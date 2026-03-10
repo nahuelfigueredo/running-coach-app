@@ -27,8 +27,8 @@ class RoutineProvider extends ChangeNotifier {
     }
   }
 
-  /// Crea una nueva rutina
-  Future<bool> createRoutine(RoutineModel routine) async {
+  /// Crea una nueva rutina y retorna su ID (o null si falla)
+  Future<String?> createRoutine(RoutineModel routine) async {
     _setLoading(true);
     _errorMessage = null;
     try {
@@ -36,11 +36,11 @@ class RoutineProvider extends ChangeNotifier {
       final newRoutine = routine.copyWith(id: id);
       _routines.insert(0, newRoutine);
       _setLoading(false);
-      return true;
+      return id;
     } catch (e) {
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
       _setLoading(false);
-      return false;
+      return null;
     }
   }
 

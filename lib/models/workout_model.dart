@@ -3,13 +3,17 @@ class WorkoutModel {
   final String id;
   final String routineId;
   final String name;
-  final String type; // 'continuous' | 'intervals' | 'fartlek' | 'series' | 'recovery'
+  final String type; // 'continuous' | 'intervals' | 'fartlek' | 'series' | 'recovery' | etc.
   final String description;
   final double distance; // km
   final int duration; // minutos
   final String pace; // "5:30"
   final int dayOfWeek; // 0-6 (0 = lunes)
   final int order;
+  final String intensity; // 'easy' | 'moderate' | 'hard' | 'maximum'
+  final int? series;
+  final int? restTime; // segundos
+  final String? notes;
 
   const WorkoutModel({
     required this.id,
@@ -22,6 +26,10 @@ class WorkoutModel {
     required this.pace,
     required this.dayOfWeek,
     required this.order,
+    this.intensity = 'easy',
+    this.series,
+    this.restTime,
+    this.notes,
   });
 
   /// Crea un WorkoutModel desde un mapa de Firestore
@@ -37,6 +45,10 @@ class WorkoutModel {
       pace: map['pace'] as String? ?? '',
       dayOfWeek: (map['dayOfWeek'] as num?)?.toInt() ?? 0,
       order: (map['order'] as num?)?.toInt() ?? 0,
+      intensity: map['intensity'] as String? ?? 'easy',
+      series: (map['series'] as num?)?.toInt(),
+      restTime: (map['restTime'] as num?)?.toInt(),
+      notes: map['notes'] as String?,
     );
   }
 
@@ -52,6 +64,10 @@ class WorkoutModel {
       'pace': pace,
       'dayOfWeek': dayOfWeek,
       'order': order,
+      'intensity': intensity,
+      if (series != null) 'series': series,
+      if (restTime != null) 'restTime': restTime,
+      if (notes != null) 'notes': notes,
     };
   }
 
@@ -67,6 +83,10 @@ class WorkoutModel {
     String? pace,
     int? dayOfWeek,
     int? order,
+    String? intensity,
+    int? series,
+    int? restTime,
+    String? notes,
   }) {
     return WorkoutModel(
       id: id ?? this.id,
@@ -79,6 +99,10 @@ class WorkoutModel {
       pace: pace ?? this.pace,
       dayOfWeek: dayOfWeek ?? this.dayOfWeek,
       order: order ?? this.order,
+      intensity: intensity ?? this.intensity,
+      series: series ?? this.series,
+      restTime: restTime ?? this.restTime,
+      notes: notes ?? this.notes,
     );
   }
 
