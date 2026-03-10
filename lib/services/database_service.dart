@@ -118,6 +118,22 @@ class DatabaseService {
     }
   }
 
+  /// Obtiene las rutinas asignadas a un alumno específico
+  Future<List<RoutineModel>> getRoutinesByStudent(String studentId) async {
+    try {
+      final snapshot = await _firestore
+          .collection(Collections.routines)
+          .where('studentId', isEqualTo: studentId)
+          .orderBy('createdAt', descending: true)
+          .get();
+      return snapshot.docs
+          .map((doc) => RoutineModel.fromMap(doc.data(), doc.id))
+          .toList();
+    } catch (e) {
+      throw Exception('Error al obtener rutinas del alumno: $e');
+    }
+  }
+
   /// Actualiza una rutina existente
   Future<void> updateRoutine(String routineId, Map<String, dynamic> data) async {
     try {

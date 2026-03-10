@@ -23,13 +23,48 @@ class WorkoutTypes {
   static const String fartlek = 'fartlek';
   static const String series = 'series';
   static const String recovery = 'recovery';
+  static const String hills = 'hills';
+  static const String activeRest = 'active_rest';
+  static const String rest = 'rest';
+  static const String strength = 'strength';
 
   static const Map<String, String> labels = {
-    continuous: 'Continuo',
+    continuous: 'Carrera continua',
     intervals: 'Intervalos',
     fartlek: 'Fartlek',
     series: 'Series',
     recovery: 'Recuperación',
+    hills: 'Cuestas',
+    activeRest: 'Descanso activo',
+    rest: 'Descanso completo',
+    strength: 'Fortalecimiento',
+  };
+
+  static const Map<String, String> icons = {
+    continuous: '🏃',
+    intervals: '💪',
+    fartlek: '⚡',
+    series: '🔄',
+    recovery: '🧘',
+    hills: '🏔️',
+    activeRest: '🧘',
+    rest: '😴',
+    strength: '🏋️',
+  };
+}
+
+/// Intensidades de entrenamiento
+class Intensity {
+  static const String easy = 'easy';
+  static const String moderate = 'moderate';
+  static const String hard = 'hard';
+  static const String maximum = 'maximum';
+
+  static const Map<String, String> labels = {
+    easy: 'Suave (60-70% FCMax)',
+    moderate: 'Moderado (70-80% FCMax)',
+    hard: 'Intenso (80-90% FCMax)',
+    maximum: 'Máximo (>90% FCMax)',
   };
 }
 
@@ -62,15 +97,36 @@ class SessionStatus {
 
 /// Días de la semana
 class WeekDays {
-  static const List<String> labels = [
-    'Lunes',
-    'Martes',
-    'Miércoles',
-    'Jueves',
-    'Viernes',
-    'Sábado',
-    'Domingo',
+  static const String monday = 'monday';
+  static const String tuesday = 'tuesday';
+  static const String wednesday = 'wednesday';
+  static const String thursday = 'thursday';
+  static const String friday = 'friday';
+  static const String saturday = 'saturday';
+  static const String sunday = 'sunday';
+
+  static const List<String> ordered = [
+    monday, tuesday, wednesday, thursday, friday, saturday, sunday,
   ];
+
+  static const Map<String, String> labels = {
+    monday: 'Lunes',
+    tuesday: 'Martes',
+    wednesday: 'Miércoles',
+    thursday: 'Jueves',
+    friday: 'Viernes',
+    saturday: 'Sábado',
+    sunday: 'Domingo',
+  };
+
+  /// Convierte índice (0 = lunes) a clave de día
+  static String fromIndex(int index) => ordered[index % 7];
+
+  /// Convierte clave de día a índice (0 = lunes)
+  static int toIndex(String day) {
+    final idx = ordered.indexOf(day);
+    return idx == -1 ? 0 : idx;
+  }
 }
 
 /// Mensajes de error

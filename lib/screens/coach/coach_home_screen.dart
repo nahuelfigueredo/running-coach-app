@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/routine_provider.dart';
+import '../../services/database_service.dart';
 import '../../utils/theme.dart';
+import '../../widgets/stats_card.dart';
 import 'students_list_screen.dart';
 import 'create_routine_screen.dart';
 
@@ -23,7 +25,7 @@ class _CoachHomeScreenState extends State<CoachHomeScreen> {
     final coach = auth.currentUser;
 
     final pages = [
-      _CoachDashboard(coachName: coach?.name ?? 'Coach'),
+      _CoachDashboard(coachName: coach?.name ?? 'Coach', coachId: coach?.uid ?? ''),
       const StudentsListScreen(),
       const _RoutinesTab(),
     ];
@@ -56,10 +58,43 @@ class _CoachHomeScreenState extends State<CoachHomeScreen> {
 }
 
 /// Dashboard principal del coach
-class _CoachDashboard extends StatelessWidget {
+class _CoachDashboard extends StatefulWidget {
   final String coachName;
+  final String coachId;
 
-  const _CoachDashboard({required this.coachName});
+  const _CoachDashboard({required this.coachName, required this.coachId});
+
+  @override
+  State<_CoachDashboard> createState() => _CoachDashboardState();
+}
+
+class _CoachDashboardState extends State<_CoachDashboard> {
+  final _db = DatabaseService();
+  int _studentCount = 0;
+  int _routineCount = 0;
+  bool _loadingStats = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStats();
+  }
+
+  Future<void> _loadStats() async {
+    try {
+      final students = await _db.getStudentsByCoach(widget.coachId);
+      final routines = await _db.getRoutinesByCoach(widget.coachId);
+      if (mounted) {
+        setState(() {
+          _studentCount = students.length;
+          _routineCount = routines.length;
+        });
+      }
+    } catch (_) {
+    } finally {
+      if (mounted) setState(() => _loadingStats = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,9 +117,9 @@ class _CoachDashboard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Saludo
+            // Saludo personalizado
             Text(
-              '¡Hola, $coachName! 👋',
+              '¡Hola, ${widget.coachName}! 👋',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: 4),
@@ -92,7 +127,38 @@ class _CoachDashboard extends StatelessWidget {
               'Gestiona tus alumnos y rutinas',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
+            // Estadísticas
+            Text(
+              'Resumen',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 12),
+            if (_loadingStats)
+              const Center(child: CircularProgressIndicator())
+            else
+              Row(
+                children: [
+                  Expanded(
+                    child: StatsCard(
+                      title: 'Alumnos',
+                      value: '$_studentCount',
+                      icon: Icons.people,
+                      color: AppTheme.primaryColor,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: StatsCard(
+                      title: 'Rutinas',
+                      value: '$_routineCount',
+                      icon: Icons.fitness_center,
+                      color: AppTheme.secondaryColor,
+                    ),
+                  ),
+                ],
+              ),
+            const SizedBox(height: 24),
             // Accesos rápidos
             Text(
               'Acciones rápidas',
@@ -130,14 +196,6 @@ class _CoachDashboard extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 32),
-            // Información de la app
-            _InfoCard(
-              icon: Icons.info_outline,
-              title: 'Acerca de la app',
-              content:
-                  'Crea rutinas personalizadas, asígnalas a tus alumnos y realiza seguimiento de su progreso.',
             ),
           ],
         ),
@@ -272,50 +330,6 @@ class _QuickActionCard extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _InfoCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String content;
-
-  const _InfoCard({
-    required this.icon,
-    required this.title,
-    required this.content,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: AppTheme.primaryColor),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    content,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ],
-              ),
-            ),
-          ],
         ),
       ),
     );
