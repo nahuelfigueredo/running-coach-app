@@ -46,9 +46,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _loadingCoaches = true);
     try {
       final db = DatabaseService();
+      print('🔍 Intentando cargar coaches...');
       _coaches = await db.getUsersByRole(Roles.coach);
-    } catch (_) {
+      print('✅ Coaches cargados: ${_coaches.length}');
+      for (var coach in _coaches) {
+        print('  👤 ${coach.name} (${coach.email})');
+      }
+    } catch (e, stackTrace) {
+      print('❌ Error cargando coaches: $e');
+      print('Stack trace: $stackTrace');
       _coaches = [];
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al cargar coaches: ${e.toString()}'),
+            backgroundColor: AppTheme.errorColor,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loadingCoaches = false);
     }
@@ -68,6 +85,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    print('🔐 Intentando registrar usuario: ${_emailController.text} (rol: $_selectedRole)');
+
     final authProvider = context.read<AuthProvider>();
     final success = await authProvider.signUp(
       _emailController.text,
@@ -79,11 +98,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (!mounted) return;
 
-    if (!success) {
+    if (success) {
+      print('✅ Registro exitoso para: ${_emailController.text}');
+    } else {
+      final errorMsg = authProvider.errorMessage ?? ErrorMessages.genericError;
+      print('❌ Error en registro: $errorMsg');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authProvider.errorMessage ?? ErrorMessages.genericError),
+          content: Text(errorMsg),
           backgroundColor: AppTheme.errorColor,
+          duration: const Duration(seconds: 5),
         ),
       );
     }
